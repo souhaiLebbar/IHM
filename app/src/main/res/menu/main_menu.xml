@@ -3,7 +3,7 @@
 
     <item
         android:id="@+id/demandG"
-        android:icon="@drawable/home_icon"
+        android:iconTint="@color/black"
         android:title="DEMAND">
         <menu>
             <group android:checkableBehavior="single">
@@ -27,14 +27,17 @@
 
     <item
         android:id="@+id/donner_1"
-        android:icon="@drawable/home_icon"
         android:title="GIVE">
         <menu>
             <group android:checkableBehavior="single">
                 <item
                     android:id="@+id/give"
-                    android:icon="@drawable/icons8_give_50"
+                    android:icon="@drawable/icons8_add_list_24"
                     android:title="new donation !" />
+                <item
+                    android:id="@+id/myList"
+                    android:icon="@drawable/icons8_list_16"
+                    android:title="my donation list" />
                 <item
                     android:id="@+id/new_requests"
                     android:icon="@drawable/icons8_demand_50"
@@ -45,7 +48,7 @@
     </item>
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/stats_1"
+            android:id="@+id/stats"
             android:icon="@drawable/icons8_data_grid_64"
             android:title="statistics" />
     </group>

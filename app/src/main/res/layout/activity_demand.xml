@@ -10,10 +10,13 @@
 
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/navigation_view"
-        style="@style/navigation"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="start"
+        app:itemIconTint="@color/black"
+        app:itemTextColor="@color/black"
+        app:itemTextAppearance="@color/black"
+        android:theme="@style/navigation"
         android:background="@color/brown"
         app:headerLayout="@layout/header"
         app:menu="@menu/main_menu" />

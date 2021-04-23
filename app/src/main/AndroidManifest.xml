@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.polytech.ihm">
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
 
     <application
@@ -16,7 +21,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.IHM">
-        <activity android:name=".activities.demand.Filtre"></activity>
+        <activity android:name=".fragment.PictureFragment"
+            tools:ignore="Instantiatable" />
+        <activity android:name=".activities.give.MyList" />
+        <activity android:name=".activities.Basket" />
+        <activity android:name=".activities.demand.Filtre" />
         <activity android:name=".activities.stats.statistics" />
         <activity android:name=".activities.give.Request" />
         <activity android:name=".activities.give.Donate" />

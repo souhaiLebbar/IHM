@@ -10,17 +10,20 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.VoiceInteractor;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.preference.PreferenceManager;
+import android.provider.CalendarContract;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -29,6 +32,12 @@ import android.widget.TextView;
 
 import com.google.android.material.navigation.NavigationView;
 import com.polytech.ihm.R;
+import com.polytech.ihm.activities.give.Donate;
+import com.polytech.ihm.activities.give.MyList;
+import com.polytech.ihm.activities.give.Request;
+import com.polytech.ihm.activities.stats.statistics;
+import com.polytech.ihm.models.BasketHelper;
+import com.polytech.ihm.models.Extra;
 import com.polytech.ihm.models.Util;
 
 import org.osmdroid.api.IMapController;
@@ -37,34 +46,33 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
-import org.osmdroid.views.overlay.OverlayItem;
-import org.osmdroid.views.overlay.Polyline;
-import org.osmdroid.views.overlay.infowindow.BasicInfoWindow;
 import org.osmdroid.views.overlay.infowindow.InfoWindow;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Random;
 
 public class Demand extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private static final int PERMISSION_REQUEST_CODE = 1;
     private MapView map;
     private LocationManager locationManager;
     private LocationListener locationListener;
+    private ArrayList<BasketHelper> markers;
+    private ArrayList<BasketHelper> favoriteBaskets;
+    private ArrayList<BasketHelper> reqBaskets;
     //coordonée
     private double myLongitude;
     private double myLattitude;
     private MyLocationNewOverlay mLocationOverlay;
-    //trajet
-    private ArrayList<GeoPoint> trajet;
-
     //menu
     DrawerLayout drawerLayout;
     NavigationView navigationView;
     Button menuIcon;
 
-    //fin
-    @RequiresApi(api = Build.VERSION_CODES.M)
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,6 +82,10 @@ public class Demand extends AppCompatActivity implements NavigationView.OnNaviga
                         PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
                 );
         setContentView(R.layout.activity_demand);
+        //initialise baskets
+        favoriteBaskets = new ArrayList<>();
+        reqBaskets = new ArrayList<>();
+
         map = findViewById(R.id.map);
         // Hooks Drawer Menu
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -83,25 +95,106 @@ public class Demand extends AppCompatActivity implements NavigationView.OnNaviga
         //http://leaflet-extras.github.io/leaflet-providers/preview/
         map.setTileSource(TileSourceFactory.MAPNIK); //render
         map.setBuiltInZoomControls(true);            //zoomable
-        GeoPoint startPoint = new GeoPoint(43.61572296415799, 7.071842570348114);
+        //should be Localisation
+        GeoPoint startPoint = new GeoPoint(43.675050, 7.058324);
         IMapController mapController = map.getController();
-        mapController.setZoom(18.0);
+        mapController.setZoom(14.0);
         mapController.setCenter(startPoint);
-
-        map.getOverlays().add(addMarker(new GeoPoint(43.61572296415799, 7.071842570348114)));
+        //setLocalisation();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            generateMarkers();
+        }
+        //map.getOverlays().add(addMarker(new GeoPoint(43.61572296415799, 7.071842570348114)));
         map.invalidate();
         //navigation Drawer
         navifationDrawer();
     }
+    //markers
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private void generateMarkers() {
+        markers = new ArrayList<>();
+        for(int i=0;i<20;i++){
+            addMarker(
+                    new BasketHelper(generateTitle(),generateDescription(),generateWeight(),generatePNumber(),generateType(),generateGeoPoint(),generatePicture())
+            );
 
+        }
+    }
+    private int generatePicture() {
+        Random rand = new Random();
+        switch(rand.nextInt(5)){
+            case 0: return R.drawable.image1;
+            case 1: return R.drawable.image2;
+            case 2: return R.drawable.image3;
+            case 3: return R.drawable.image4;
+            case 4: return R.drawable.image5;
+        }
+        return R.drawable.image1;
+    }
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private String generateDescription() {
+        int leftLimit = 48; // numeral '0'
+        int rightLimit = 122; // letter 'z'
+        int targetStringLength = 10;
+        Random random = new Random();
+
+        String generatedString = random.ints(leftLimit, rightLimit + 1)
+                .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
+                .limit(targetStringLength)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                .toString();
+
+        //Util.print(getApplicationContext(),generatedString);
+        return generatedString;
+    }
+    private float generateWeight() {
+        return new Random().nextInt(100);
+    }
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private String generatePNumber() {
+        return "06"+(10000000 + new Random().nextInt(90000000));
+    }
+    private BasketHelper.Type generateType() {
+        switch(new Random().nextInt(4)){
+            case 0:
+                return BasketHelper.Type.HONEYCOOB;
+            case 1:
+                return BasketHelper.Type.CORRUGATED;
+            case 2:
+                return BasketHelper.Type.PLAT;
+            case 3:
+                return BasketHelper.Type.WOODEN;
+        }
+        return BasketHelper.Type.HONEYCOOB;
+    }
+    private GeoPoint generateGeoPoint() {
+        Random rand = new Random();
+        return new GeoPoint(rand.nextDouble()*0.1 + 43.6,rand.nextDouble()*0.1 +7);
+    }
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private String generateTitle() {
+        int leftLimit = 48; // numeral '0'
+        int rightLimit = 122; // letter 'z'
+        int targetStringLength = 10;
+        Random random = new Random();
+
+        String generatedString = random.ints(leftLimit, rightLimit + 1)
+                .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
+                .limit(targetStringLength)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                .toString();
+
+        //Util.print(getApplicationContext(),"title:"+generatedString);
+        return generatedString;
+    }
     @SuppressLint("UseCompatLoadingForDrawables")
-    private Marker addMarker(GeoPoint gp) {
+    private Marker addMarker(BasketHelper basketHelper) {
         Marker m = new Marker((map));
-        m.setPosition(gp);
+        m.setPosition(basketHelper.getMyGeoPoint());
         m.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
         m.setIcon(getResources().getDrawable(R.drawable.icons8_trolley_100));
-        m.setDraggable(true);
-        m.setInfoWindow(new MapCustomInfoBubble(map));
+        m.setDraggable(false);
+        m.setInfoWindow(new MapCustomInfoBubble(map,basketHelper));
         m.setInfoWindowAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_TOP);
 
         map.getOverlayManager().add(m);
@@ -112,7 +205,6 @@ public class Demand extends AppCompatActivity implements NavigationView.OnNaviga
                 if (m.isInfoWindowShown())
                     m.closeInfoWindow();
                 else {
-
                     m.showInfoWindow();
                 }
                 return true;
@@ -123,6 +215,8 @@ public class Demand extends AppCompatActivity implements NavigationView.OnNaviga
     }
 
 
+
+    //Menu
     private void navifationDrawer() {
         //Navigation Drawer
         navigationView.bringToFront();
@@ -141,7 +235,6 @@ public class Demand extends AppCompatActivity implements NavigationView.OnNaviga
             }
         });
     }
-
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
 
@@ -151,33 +244,70 @@ public class Demand extends AppCompatActivity implements NavigationView.OnNaviga
                 break;
             case R.id.requests:
                 Intent intentRequest = new Intent(this, Requests.class);
+                intentRequest.putParcelableArrayListExtra(Extra.basketRList, reqBaskets);
                 startActivity(intentRequest);
                 break;
             case R.id.favorite:
                 Intent intentFavorite = new Intent(this, Favorite.class);
+                intentFavorite.putParcelableArrayListExtra(Extra.basketFList, favoriteBaskets);
                 startActivity(intentFavorite);
                 break;
+            case R.id.new_requests:
+                Intent intentReq = new Intent(this, Request.class);
+                startActivity(intentReq);
+                break;
+            case R.id.give:
+                Intent intentD = new Intent(this, Donate.class);
+                startActivity(intentD);
+                break;
+            case R.id.myList:
+                Intent intentL = new Intent(this, MyList.class);
+                startActivity(intentL);
+                break;
+            case R.id.stats:
+                Intent intentS = new Intent(this, statistics.class);
+                startActivity(intentS);
+                break;
+
 
         }
         return true;
     }
 
 
-    //fin menu
-
-
+    //Map lifeCycle
     @Override
     protected void onPause() {
         super.onPause();
         map.onPause();
     }
-
     @Override
     protected void onResume() {
         super.onResume();
         map.onResume();
     }
 
+
+    //
+    public void toProfile(View view) {
+        Intent intentProfile = new Intent(this, com.polytech.ihm.activities.Profile.class);
+        startActivity(intentProfile);
+    }
+    public void makeCall(String phoneNumber) {
+        Intent intent = new Intent(Intent.ACTION_CALL);
+        intent.setData(Uri.parse("tel:" + phoneNumber));
+        int result = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CALL_PHONE);
+        if (result == PackageManager.PERMISSION_GRANTED) {
+
+            startActivity(intent);
+
+        } else {
+
+            requestPermission();
+        }
+    }
+
+    // Localisation
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void setLocalisation() {
         //copier_coller
@@ -214,6 +344,7 @@ public class Demand extends AppCompatActivity implements NavigationView.OnNaviga
                     Manifest.permission.INTERNET}, 10);
             return;
         }
+        /*
         locationManager.requestLocationUpdates("gps", 5000, 5, locationListener);
         Polyline line = new Polyline();
         line.setTitle("Un trajet");
@@ -229,18 +360,34 @@ public class Demand extends AppCompatActivity implements NavigationView.OnNaviga
         line.setInfoWindow(new BasicInfoWindow(R.layout.bonuspack_bubble, map));
         map.getOverlayManager().add(line);
         map.invalidate();
+        */
         //fin
     }
+    private void requestPermission() {
 
-    public void toProfile(View view) {
-        Intent intentProfile = new Intent(this, com.polytech.ihm.activities.Profile.class);
-        startActivity(intentProfile);
+        if (ActivityCompat.shouldShowRequestPermissionRationale(Demand.this, Manifest.permission.CALL_PHONE)) {
+        } else {
+
+            ActivityCompat.requestPermissions(Demand.this, new String[]{Manifest.permission.CALL_PHONE}, PERMISSION_REQUEST_CODE);
+        }
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSION_REQUEST_CODE:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    makeCall(null);
+                }
+                break;
+        }
     }
 
+    //costume the marker
     class MapCustomInfoBubble extends InfoWindow {
-
-        public MapCustomInfoBubble(MapView mapView) {
+        private BasketHelper basketHelper;
+        public MapCustomInfoBubble(MapView mapView,BasketHelper basketHelper) {
             super(R.layout.map_infobubble_black, mapView);//my custom layout and my mapView
+            this.basketHelper=basketHelper;
         }
 
         @Override
@@ -254,30 +401,40 @@ public class Demand extends AppCompatActivity implements NavigationView.OnNaviga
             Marker marker = (Marker) item; //the marker on which you click to open the bubble
             //marker infos
             TextView title = mView.findViewById(R.id.name);
+            TextView desc = mView.findViewById(R.id.bubble_desc);
+            TextView weight = mView.findViewById(R.id.weight);
+            TextView type = mView.findViewById(R.id.type);
             ImageView favorite = (ImageView) mView.findViewById(R.id.bubble_favorie);
             ImageView agenda = (ImageView) mView.findViewById(R.id.bubble_agenda);
             ImageView call = (ImageView) mView.findViewById(R.id.bubble_call);
+            Button request = (Button) mView.findViewById(R.id.request);
 
-            title.setText("show-shine");
-            TextView desc = mView.findViewById(R.id.bubble_desc);
-            desc.setText("Description : Un paque \n" +
-                    "de carton ondulé peu \n" +
-                    "épais, les trois quarts \n" +
-                    "sont de couleur blanche, \n" +
-                    "le reste est maron\n" +
-                    "Weight : 38 kg\n");
+            title.setText("title: "+basketHelper.getTitle());
+            desc.setText("description: "+basketHelper.getDescription());
+            weight.setText("weight: "+basketHelper.getWeight());
+            type.setText("type :"+basketHelper.getType());
+
             call.setOnClickListener(new View.OnClickListener() {
 
                 @Override
                 public void onClick(View v) {
-                    makeCall();
+                    makeCall(basketHelper.getPhoneNumber());
                 }
             });
             agenda.setOnClickListener(new View.OnClickListener() {
-
                 @Override
                 public void onClick(View v) {
-                    //add number to your contact
+                    // Event is on January 23, 2021 -- from 7:30 AM to 10:30 AM.
+                    Intent calendarIntent = new Intent(Intent.ACTION_INSERT, CalendarContract.Events.CONTENT_URI);
+                    Calendar beginTime = Calendar.getInstance();
+                    beginTime.set(2021, 0, 23, 7, 30);
+                    Calendar endTime = Calendar.getInstance();
+                    endTime.set(2021, 0, 23, 10, 30);
+                    calendarIntent.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, beginTime.getTimeInMillis());
+                    calendarIntent.putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endTime.getTimeInMillis());
+                    calendarIntent.putExtra(CalendarContract.Events.TITLE, "Basket");
+                    calendarIntent.putExtra(CalendarContract.Events.EVENT_LOCATION, "Secret dojo");
+                    startActivity(calendarIntent);
                 }
             });
             favorite.setOnClickListener(new View.OnClickListener() {
@@ -287,49 +444,26 @@ public class Demand extends AppCompatActivity implements NavigationView.OnNaviga
                     boolean isfilled = Util.checkImageResource(v.getContext(), favorite, R.drawable.icons8_heart_24);
                     if (isfilled) {
                         favorite.setImageResource(R.drawable.icons8_heart_48);
+                        favoriteBaskets.add(basketHelper);
+                        //System.out.println(basketHelper);
                     } else {
                         favorite.setImageResource(R.drawable.icons8_heart_24);
+                        favoriteBaskets.remove(basketHelper);
                     }
 
+
+                }
+            });
+            request.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    //Util.print(getApplicationContext(),"request clicked");
+                    reqBaskets.add(basketHelper);
+                    v.setEnabled(false);
                 }
             });
         }
 
-    }
-
-
-    public void makeCall() {
-        Intent intent = new Intent(Intent.ACTION_CALL);
-        intent.setData(Uri.parse("tel:" + "0693727277"));
-        int result = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CALL_PHONE);
-        if (result == PackageManager.PERMISSION_GRANTED) {
-
-            startActivity(intent);
-
-        } else {
-
-            requestPermission();
-        }
-    }
-
-    private void requestPermission() {
-
-        if (ActivityCompat.shouldShowRequestPermissionRationale(Demand.this, Manifest.permission.CALL_PHONE)) {
-        } else {
-
-            ActivityCompat.requestPermissions(Demand.this, new String[]{Manifest.permission.CALL_PHONE}, PERMISSION_REQUEST_CODE);
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case PERMISSION_REQUEST_CODE:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    makeCall();
-                }
-                break;
-        }
     }
 
 }
