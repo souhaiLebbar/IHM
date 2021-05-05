@@ -51,5 +51,9 @@
             android:id="@+id/stats"
             android:icon="@drawable/icons8_data_grid_64"
             android:title="statistics" />
+        <item
+            android:id="@+id/tweet"
+            android:icon="@drawable/osm_ic_follow_me_on"
+            android:title="send a Tweet" />
     </group>
 </menu>

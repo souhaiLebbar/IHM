@@ -52,6 +52,7 @@ import com.polytech.ihm.activities.Basket;
 import com.polytech.ihm.activities.give.Donate;
 import com.polytech.ihm.activities.give.MyList;
 import com.polytech.ihm.activities.give.Request;
+import com.polytech.ihm.activities.stats.TweetActivity;
 import com.polytech.ihm.activities.stats.statistics;
 import com.polytech.ihm.models.BasketHelper;
 import com.polytech.ihm.models.Extra;
@@ -424,6 +425,10 @@ public class Demand extends AppCompatActivity implements NavigationView.OnNaviga
             case R.id.stats:
                 Intent intentS = new Intent(this, statistics.class);
                 startActivity(intentS);
+                break;
+            case R.id.tweet:
+                Intent intentT = new Intent(this, TweetActivity.class);
+                startActivity(intentT);
                 break;
 
 

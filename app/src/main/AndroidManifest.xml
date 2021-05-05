@@ -9,6 +9,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <uses-feature android:name="android.hardware.camera" />
+
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
@@ -21,12 +22,14 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.IHM">
-        <activity android:name=".fragment.PictureFragment"
+        <activity
+            android:name=".fragment.PictureFragment"
             tools:ignore="Instantiatable" />
         <activity android:name=".activities.give.MyList" />
         <activity android:name=".activities.Basket" />
         <activity android:name=".activities.demand.Filtre" />
         <activity android:name=".activities.stats.statistics" />
+        <activity android:name=".activities.stats.TweetActivity" />
         <activity android:name=".activities.give.Request" />
         <activity android:name=".activities.give.Donate" />
         <activity android:name=".activities.Profile" />
